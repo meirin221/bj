@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>銀行くん</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#e9efeb; --surface:#fff; --ink:#132a20; --muted:#5d7268; --line:#cbd8d0;
+  --felt:#1f5e45; --felt-2:#18503a; --felt-ink:#eaf5ee; --felt-line:rgba(255,255,255,.2);
+  --gold:#d8a420; --chip-on:#f4e3a6; --chip-on-ink:#3b2a00;
+  --plus:#1f8a56; --minus:#c2352b; --warn-bg:#fff2d6; --warn-ink:#6b4a00;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1a15; --surface:#15251e; --ink:#e3eee8; --muted:#93a89e; --line:#2a3d34;
+    --felt:#174a36; --felt-2:#123d2c; --felt-ink:#e6f3eb; --felt-line:rgba(255,255,255,.14);
+    --chip-on:#e6c75a; --chip-on-ink:#2a1e00; --plus:#4cc38a; --minus:#ef6b5f; --warn-bg:#3a2e10; --warn-ink:#f3d58a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1a15; --surface:#15251e; --ink:#e3eee8; --muted:#93a89e; --line:#2a3d34;
+  --felt:#174a36; --felt-2:#123d2c; --felt-ink:#e6f3eb; --felt-line:rgba(255,255,255,.14);
+  --chip-on:#e6c75a; --chip-on-ink:#2a1e00; --plus:#4cc38a; --minus:#ef6b5f; --warn-bg:#3a2e10; --warn-ink:#f3d58a;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif;
+  font-size:16px;line-height:1.6;font-variant-numeric:tabular-nums}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.6rem;font-weight:900;margin:4px 0 20px;line-height:1.2}
+h1 small{display:block;font-size:.8rem;font-weight:500;color:var(--muted);margin-top:4px}
+h2{font-size:1.1rem;font-weight:700;margin:0 0 12px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+h2 span{font-size:.82rem;font-weight:500;color:var(--muted)}
+section{margin-bottom:28px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input[type=text],input[type=number],select{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
+input[type=number]{width:6em;text-align:right}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 16px;font-weight:700}
+.btn.primary{background:var(--felt);border-color:var(--felt);color:var(--felt-ink)}
+.btn.danger{color:var(--minus);border-color:currentColor;background:transparent}
+.btn.ghost{background:transparent}
+.btn.sm{padding:4px 12px;font-size:.85rem}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.tag{display:inline-flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px 6px 4px 12px}
+.tag button{border:0;background:transparent;color:var(--muted);width:26px;height:26px;border-radius:50%}
+.tag button:hover{background:var(--line)}
+.settings{display:grid;grid-template-columns:auto 1fr;gap:10px 14px;align-items:center;margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
+.settings label{color:var(--muted);font-size:.95rem}
+.hint{color:var(--muted);font-size:.85rem;margin:0}
+
+/* felt: loan entry */
+.felt{background:radial-gradient(120% 90% at 50% 0%,var(--felt) 0%,var(--felt-2) 100%);color:var(--felt-ink);border-radius:22px;padding:18px 16px;box-shadow:inset 0 0 0 6px rgba(0,0,0,.12)}
+.felt h2 span{color:var(--felt-ink);opacity:.8}
+.felt select,.felt input{background:rgba(0,0,0,.2);border-color:var(--felt-line);color:var(--felt-ink)}
+.felt select option{color:#132a20;background:#fff}
+.loan-form{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.loan-form .mid{font-size:.85rem;opacity:.85;text-align:center}
+.loan-form2{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:10px}
+.felt .btn.primary{background:var(--chip-on);border-color:var(--chip-on);color:var(--chip-on-ink)}
+.loans{list-style:none;margin:14px 0 0;padding:0;border-top:1px solid var(--felt-line)}
+.loans li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dotted var(--felt-line)}
+.loans .x{border:0;background:transparent;color:var(--felt-ink);opacity:.75;width:30px;height:30px;border-radius:50%}
+.loans .x:hover{background:rgba(255,255,255,.12)}
+.loan-sum{margin-top:10px;font-size:.85rem;opacity:.85}
+.felt .empty{opacity:.85;margin:10px 0 0;font-size:.9rem}
+
+/* final chips */
+.final-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.final-row:last-of-type{border-bottom:0}
+.final-row .sub{display:block;font-size:.8rem;color:var(--muted)}
+.check{margin-top:12px;padding:10px 12px;border-radius:10px;font-size:.9rem}
+.check.ok{background:var(--bg);color:var(--muted)}
+.check.ng{background:var(--warn-bg);color:var(--warn-ink)}
+
+/* result */
+.res-table{width:100%;border-collapse:collapse;font-size:.92rem}
+.res-wrap{overflow-x:auto}
+.res-table th,.res-table td{padding:8px 6px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.res-table th:first-child,.res-table td:first-child{text-align:left}
+.res-table th{color:var(--muted);font-weight:500;font-size:.8rem}
+.res-table td.money{font-weight:900;font-size:1.05rem}
+.plus-t{color:var(--plus)} .minus-t{color:var(--minus)}
+h3{font-size:1rem;margin:20px 0 6px}
+.transfers{list-style:none;margin:0;padding:0}
+.transfers li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.transfers li:last-child{border-bottom:0}
+.arrow{color:var(--muted);font-size:.85rem;margin:0 4px}
+.amt{font-weight:900;font-size:1.15rem}
+.foot{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>銀行くん<small>ゲームごとの勝ち負けはメモって各自計算してください</small></h1>
+
+  <section>
+    <h2>最初に</h2>
+    <div class="panel">
+      <div class="row">
+        <input type="text" id="newName" placeholder="プレイヤー名" style="flex:1" maxlength="16" aria-label="プレイヤー名">
+        <button class="btn primary" id="addPlayer">追加</button>
+      </div>
+      <div class="tags" id="playerTags"></div>
+      <div class="settings">
+        <label for="chipValue">チップ1枚</label>
+        <div class="row"><input type="number" id="chipValue" min="0" step="1"><input type="text" id="unit" style="width:4em" aria-label="単位"></div>
+        <label for="initChips">最初の持ち枚数</label>
+        <div class="row"><input type="number" id="initChips" min="0" step="1"><span>枚</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="felt" id="loanPanel"></div>
+  </section>
+
+  <section>
+    <h2>終了時の手持ち<span>各自の今の枚数</span></h2>
+    <div class="panel" id="finalPanel"></div>
+  </section>
+
+  <section>
+    <h2>結果</h2>
+    <div class="panel" id="resultPanel"></div>
+    <div class="foot">
+      <button class="btn danger" id="newGame">新しいゲームを始める</button>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const KEY='bj-chip-settle-v1';
+function defaults(){return {players:[],chipValue:100,unit:'円',init:20,loans:[],finals:{},seq:1}}
+let S;
+try{S=Object.assign(defaults(),JSON.parse(localStorage.getItem(KEY))||{})}catch(e){S=defaults()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const r2=n=>Math.round(n*100)/100;
+const num=n=>r2(n).toLocaleString('ja-JP',{maximumFractionDigits:2});
+const sgn=n=>(r2(n)>0?'+':'')+num(n);
+const money=n=>sgn(n)+S.unit;
+const BOX='box';
+const nameOf=id=>id===BOX?'銀行':(S.players.find(p=>p.id===id)||{name:'(削除済み)'}).name;
+const boxNet=()=>S.loans.reduce((s,l)=>s+(l.from===BOX?l.n:0)-(l.to===BOX?l.n:0),0);
+const expectedTotal=()=>S.init*S.players.length+boxNet();
+function loanText(x){
+  if(x.from===BOX)return `<strong>${esc(nameOf(x.to))}</strong> が <strong>銀行</strong> から ${x.n}枚`;
+  if(x.to===BOX)return `<strong>${esc(nameOf(x.from))}</strong> が <strong>銀行</strong> に ${x.n}枚 返した`;
+  return `<strong>${esc(nameOf(x.to))}</strong> が <strong>${esc(nameOf(x.from))}</strong> から ${x.n}枚`;
+}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2200)}
+
+/* ---- setup ---- */
+function addPlayer(){
+  const i=$('newName'),n=i.value.trim();
+  if(!n){i.focus();return}
+  if(S.players.some(p=>p.name===n)){toast('同じ名前のプレイヤーがいます');return}
+  S.players.push({id:'p'+(S.seq++),name:n});i.value='';save();renderAll();i.focus();
+}
+function removePlayer(id){
+  if(S.loans.some(l=>l.from===id||l.to===id)){toast('貸し借りの記録があるプレイヤーは削除できません');return}
+  S.players=S.players.filter(p=>p.id!==id);delete S.finals[id];save();renderAll();
+}
+function renderSetup(){
+  $('playerTags').innerHTML=S.players.length?S.players.map(p=>`<span class="tag">${esc(p.name)}<button data-rm="${p.id}" aria-label="${esc(p.name)}を削除">×</button></span>`).join(''):'<p class="hint">遊ぶメンバーを追加してください。</p>';
+  $('chipValue').value=S.chipValue;$('unit').value=S.unit;$('initChips').value=S.init;
+}
+
+/* ---- loans ---- */
+function renderLoans(){
+  const el=$('loanPanel');
+  let h='<h2>チップの貸し借り<span>借りるたびに記録</span></h2>';
+  if(S.players.length<2){el.innerHTML=h+'<p class="empty">プレイヤーを2人以上登録すると記録できます。</p>';return}
+  const opts=sel=>S.players.map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${esc(p.name)}</option>`).join('')+`<option value="${BOX}" ${sel===BOX?'selected':''}>銀行</option>`;
+  const b=el.dataset.b||S.players[0].id, l=el.dataset.l||S.players[1].id;
+  h+=`<div class="loan-form">
+    <select id="borrower" aria-label="借りた人">${opts(b)}</select>
+    <span class="mid">が</span>
+    <select id="lender" aria-label="借りた先">${opts(l)}</select>
+  </div>
+  <div class="loan-form2"><span>から</span><input type="number" id="loanN" min="1" step="1" value="${el.dataset.n||20}" aria-label="枚数"><span>枚借りた</span><button class="btn primary" id="addLoan">記録</button></div>`;
+  if(S.loans.length){
+    h+='<ul class="loans">'+S.loans.map((x,i)=>`<li><span>${i+1}. ${loanText(x)}</span><button class="x" data-delloan="${x.id}" aria-label="この記録を削除">×</button></li>`).join('')+'</ul>';
+    const bn=boxNet();
+    h+=`<div class="loan-sum">${S.loans.length}件の記録。銀行から出ているのは現在 ${bn}枚。返したときは逆向きに記録すると相殺されます（銀行に返すときは、左を「銀行」にして右に返した人を選びます）。</div>`;
+  }else h+='<p class="empty">まだ貸し借りはありません。</p>';
+  el.innerHTML=h;
+}
+function addLoan(){
+  const el=$('loanPanel');
+  const to=$('borrower').value, from=$('lender').value, n=Math.floor(+$('loanN').value);
+  if(to===from){toast('借りた人と借りた先が同じです');return}
+  if(to===BOX&&boxNet()<=0){toast('銀行から借りている分がないので返却できません');return}
+  if(!(n>0)){toast('枚数を1以上で入力してください');return}
+  S.loans.push({id:S.seq++,to,from,n});
+  el.dataset.b=to;el.dataset.l=from;el.dataset.n=n;
+  save();renderAll();toast(to===BOX?`${nameOf(from)} が銀行に ${n}枚 返したことを記録しました`:`${nameOf(to)} が ${nameOf(from)} から ${n}枚 を記録しました`);
+}
+
+/* ---- calc ---- */
+function stats(){
+  return S.players.map(p=>{
+    const borrowed=S.loans.filter(l=>l.to===p.id).reduce((s,l)=>s+l.n,0);
+    const lent=S.loans.filter(l=>l.from===p.id).reduce((s,l)=>s+l.n,0);
+    const f=S.finals[p.id];
+    const final=(f===''||f==null)?null:+f;
+    const net=final==null?null:final-S.init-borrowed+lent;
+    return {id:p.id,name:p.name,borrowed,lent,final,net};
+  });
+}
+
+/* ---- finals ---- */
+function renderFinals(){
+  const el=$('finalPanel');
+  if(!S.players.length){el.innerHTML='<p class="hint">プレイヤーを登録すると入力欄が出ます。</p>';return}
+  const st=stats();
+  el.innerHTML=st.map(s=>`<div class="final-row"><label for="f_${s.id}"><strong>${esc(s.name)}</strong><span class="sub">借り ${s.borrowed}枚・貸し ${s.lent}枚</span></label><span class="row"><input type="number" id="f_${s.id}" data-final="${s.id}" min="0" step="1" value="${s.final==null?'':s.final}" placeholder="枚数"><span>枚</span></span></div>`).join('')+'<div id="chipCheck"></div>';
+  renderCheck();
+}
+function renderCheck(){
+  const box=$('chipCheck');if(!box)return;
+  const st=stats();const filled=st.filter(s=>s.final!=null);
+  const expected=expectedTotal();const bn=boxNet();
+  const note=bn?`（最初の${S.init*S.players.length}枚＋銀行から${bn}枚）`:'';
+  if(filled.length<st.length){box.className='check ok';box.textContent=`あと${st.length-filled.length}人の入力待ち（全員の合計は${expected}枚${note}になるはず）`;return}
+  const sum=filled.reduce((a,s)=>a+s.final,0);
+  if(sum===expected){box.className='check ok';box.textContent=`合計 ${sum}枚。場に出ているはずの ${expected}枚${note}と一致しています。`}
+  else{box.className='check ng';box.textContent=`合計 ${sum}枚で、場に出ているはずの ${expected}枚${note}と ${sum>expected?'+':''}${sum-expected}枚 ずれています。数え間違いがないか確認してください。`}
+}
+
+/* ---- result ---- */
+function transfers(st){
+  const cred=[],debt=[];
+  st.forEach(s=>{const v=r2(s.net*S.chipValue);if(v>0.004)cred.push({id:s.id,v});else if(v<-0.004)debt.push({id:s.id,v:-v})});
+  cred.sort((a,b)=>b.v-a.v);debt.sort((a,b)=>b.v-a.v);
+  const out=[];let i=0,j=0;
+  while(i<debt.length&&j<cred.length){
+    const x=r2(Math.min(debt[i].v,cred[j].v));
+    out.push({from:debt[i].id,to:cred[j].id,amt:x});
+    debt[i].v=r2(debt[i].v-x);cred[j].v=r2(cred[j].v-x);
+    if(debt[i].v<=0.004)i++;if(cred[j].v<=0.004)j++;
+  }
+  return out;
+}
+function renderResult(){
+  const el=$('resultPanel');const st=stats();
+  if(!st.length||st.some(s=>s.final==null)){el.innerHTML='<p class="hint">全員の終了時の枚数を入れると、勝ち額・負け額と支払い方が出ます。</p>';return}
+  const sorted=[...st].sort((a,b)=>b.net-a.net);
+  const cls=v=>v>0?'plus-t':v<0?'minus-t':'';
+  let h=`<div class="res-wrap"><table class="res-table"><thead><tr><th>名前</th><th>手持ち</th><th>借り</th><th>貸し</th><th>収支(枚)</th><th>金額</th></tr></thead><tbody>`;
+  h+=sorted.map(s=>`<tr><td>${esc(s.name)}</td><td>${s.final}</td><td>${s.borrowed}</td><td>${s.lent}</td><td class="${cls(s.net)}">${sgn(s.net)}</td><td class="money ${cls(s.net)}">${money(s.net*S.chipValue)}</td></tr>`).join('');
+  h+=`</tbody></table></div><p class="hint" style="margin-top:8px">収支(枚) ＝ 手持ち − 最初の${S.init}枚 − 借りた枚数 ＋ 貸した枚数。銀行から借りた分は「借り」に、銀行に返した分は「貸し」に含まれ、精算後に箱へ戻す前提で計算しています。</p>`;
+  const t=transfers(st);
+  h+='<h3>支払い</h3>';
+  h+=t.length?`<ul class="transfers">${t.map(x=>`<li><span><strong>${esc(nameOf(x.from))}</strong><span class="arrow">→</span><strong>${esc(nameOf(x.to))}</strong></span><span class="amt">${num(x.amt)}${esc(S.unit)}</span></li>`).join('')}</ul>`:'<p style="margin:0">全員プラマイゼロです。</p>';
+  h+='<div class="foot"><button class="btn ghost" id="copyBtn">結果をコピー</button></div>';
+  el.innerHTML=h;
+}
+function copyResult(){
+  const st=stats().sort((a,b)=>b.net-a.net);
+  const lines=['【ブラックジャック精算】',`1枚 ${num(S.chipValue)}${S.unit}／最初 ${S.init}枚`+(boxNet()?`／銀行から ${boxNet()}枚`:''),'','■ 収支',
+    ...st.map(s=>`${s.name}: ${sgn(s.net)}枚（${money(s.net*S.chipValue)}）`),'','■ 支払い',
+    ...transfers(st).map(x=>`${nameOf(x.from)} → ${nameOf(x.to)}: ${num(x.amt)}${S.unit}`)];
+  const txt=lines.join('\n');
+  const fb=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('コピーしました')}catch(e){toast('コピーできませんでした')}ta.remove()};
+  try{navigator.clipboard.writeText(txt).then(()=>toast('コピーしました'),fb)}catch(e){fb()}
+}
+
+function renderAll(){renderSetup();renderLoans();renderFinals();renderResult()}
+
+/* ---- events ---- */
+$('addPlayer').onclick=addPlayer;
+$('newName').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)addPlayer()});
+$('playerTags').addEventListener('click',e=>{const b=e.target.closest('[data-rm]');if(b)removePlayer(b.dataset.rm)});
+$('chipValue').addEventListener('change',e=>{S.chipValue=Math.max(0,+e.target.value||0);save();renderResult()});
+$('unit').addEventListener('change',e=>{S.unit=e.target.value.trim()||'円';save();renderResult()});
+$('initChips').addEventListener('change',e=>{S.init=Math.max(0,Math.floor(+e.target.value||0));save();renderFinals();renderResult()});
+$('loanPanel').addEventListener('click',e=>{
+  if(e.target.id==='addLoan'){addLoan();return}
+  const d=e.target.closest('[data-delloan]');
+  if(d){S.loans=S.loans.filter(l=>l.id!==+d.dataset.delloan);save();renderAll();toast('記録を削除しました')}
+});
+$('loanPanel').addEventListener('change',e=>{
+  const el=$('loanPanel');
+  if(e.target.id==='borrower')el.dataset.b=e.target.value;
+  if(e.target.id==='lender')el.dataset.l=e.target.value;
+  if(e.target.id==='loanN')el.dataset.n=e.target.value;
+});
+$('loanPanel').addEventListener('keydown',e=>{if(e.target.id==='loanN'&&e.key==='Enter')addLoan()});
+$('finalPanel').addEventListener('input',e=>{
+  const id=e.target.dataset.final;if(!id)return;
+  S.finals[id]=e.target.value===''?'':Math.max(0,Math.floor(+e.target.value));
+  save();renderCheck();renderResult();
+});
+$('resultPanel').addEventListener('click',e=>{if(e.target.id==='copyBtn')copyResult()});
+$('newGame').addEventListener('click',e=>{
+  const b=e.currentTarget;
+  if(b.dataset.armed){S.loans=[];S.finals={};delete b.dataset.armed;b.textContent='新しいゲームを始める';save();renderAll();toast('貸し借りと手持ちをリセットしました（メンバーと設定は残っています）');window.scrollTo({top:0});return}
+  b.dataset.armed='1';b.textContent='もう一度押すとリセット';
+  setTimeout(()=>{delete b.dataset.armed;b.textContent='新しいゲームを始める'},3000);
+});
+
+renderAll();
+</script>
+</body>
+</html>
